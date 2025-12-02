@@ -1,0 +1,33 @@
+1. make git
+
+
+2. make project on railway 
+
+
+3. make service database (postgresql) & redis // (password etc copy)
+
+
+4. make service web (stop した方がいい.　env variable 設定後に再度デプロイした方がいい.)
+
+
+5. share_variabe (copy & paste from local .env.prod) (after copy passoword etc.. of rdeis postredsql)
+
+   ⚠️ 重要: デプロイ前の必須チェック
+   - .envファイルが必ずリポジトリに存在すること
+     * DEBUG=False と SECRET_KEY（ダミー値）は必ず設定すること
+     * 他の環境変数の値は空でOK
+   - .env.prodは.gitignoreされていること（絶対にgitにコミットしない）
+   - Railway環境変数に.env.prodの全ての値を設定すること
+   - 環境変数が不足すると "decouple.UndefinedValueError: DEBUG not found" エラーが発生する
+
+
+6. make other service like workder beat flower (if using celery)
+
+
+7. railway config path (edit numReplicas and watchPatterns if you think need)
+
+
+8. add variable from share_variabe and !!!! add POST 8000 (impotant) (if flower 5555)
+
+
+9. (if use celery, totally same as web. but flower need set POST 5555 )
