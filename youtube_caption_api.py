@@ -35,6 +35,9 @@ app = FastAPI(
 WEBSHARE_PROXY_USERNAME = os.getenv("WEBSHARE_PROXY_USERNAME")
 WEBSHARE_PROXY_PASSWORD = os.getenv("WEBSHARE_PROXY_PASSWORD")
 
+# キャッシュ設定（秒）
+CACHE_TTL = int(os.getenv("CACHE_TTL", "3600"))  # デフォルト1時間
+
 def create_ytt_api():
     """プロキシ設定付きの YouTubeTranscriptApi を作成"""
     if WEBSHARE_PROXY_USERNAME and WEBSHARE_PROXY_PASSWORD:
@@ -49,6 +52,35 @@ def create_ytt_api():
 
 # APIインスタンス
 ytt_api = create_ytt_api()
+
+# シンプルなメモリキャッシュ（最大サイズ制限付き）
+_cache = {}
+CACHE_MAX_SIZE = int(os.getenv("CACHE_MAX_SIZE", "100"))  # 最大100件
+
+def get_cached_transcript(video_id: str, language: str):
+    """キャッシュから字幕を取得、なければAPIから取得してキャッシュ"""
+    import time
+    cache_key = f"{video_id}:{language}"
+    
+    # キャッシュチェック
+    if cache_key in _cache:
+        cached_data, timestamp = _cache[cache_key]
+        if time.time() - timestamp < CACHE_TTL:
+            return cached_data
+        else:
+            # 期限切れは削除
+            del _cache[cache_key]
+    
+    # キャッシュサイズ制限（古いものから削除）
+    if len(_cache) >= CACHE_MAX_SIZE:
+        # 最も古いエントリを削除
+        oldest_key = min(_cache.keys(), key=lambda k: _cache[k][1])
+        del _cache[oldest_key]
+    
+    # APIから取得
+    transcript = ytt_api.fetch(video_id, languages=[language])
+    _cache[cache_key] = (transcript, time.time())
+    return transcript
 
 
 @app.get("/")
@@ -109,8 +141,8 @@ def get_caption(
     - **language**: 言語コード（ja, en など）
     """
     try:
-        # 字幕を取得
-        transcript = ytt_api.fetch(video_id, languages=[language])
+        # 字幕を取得（キャッシュ付き）
+        transcript = get_cached_transcript(video_id, language)
 
         # フォーマット変換
         if format == "srt":
@@ -155,7 +187,8 @@ def get_full_text(
     n8nでAI処理する場合に便利
     """
     try:
-        transcript = ytt_api.fetch(video_id, languages=[language])
+        # キャッシュ付きで取得
+        transcript = get_cached_transcript(video_id, language)
 
         # すべてのテキストを結合（新しいAPIではオブジェクト属性としてアクセス）
         full_text = " ".join([snippet.text for snippet in transcript])
