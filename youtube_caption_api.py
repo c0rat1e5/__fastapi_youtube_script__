@@ -31,17 +31,18 @@ app = FastAPI(
 )
 
 # プロキシ設定（環境変数から取得）
-# Webshare形式: user:pass@host:port
-PROXY_URL = os.getenv("PROXY_URL")  # 例: http://user:pass@host:port
+# Webshare Residential用
+WEBSHARE_PROXY_USERNAME = os.getenv("WEBSHARE_PROXY_USERNAME")
+WEBSHARE_PROXY_PASSWORD = os.getenv("WEBSHARE_PROXY_PASSWORD")
 
 def create_ytt_api():
     """プロキシ設定付きの YouTubeTranscriptApi を作成"""
-    if PROXY_URL:
-        from youtube_transcript_api.proxies import GenericProxyConfig
+    if WEBSHARE_PROXY_USERNAME and WEBSHARE_PROXY_PASSWORD:
+        from youtube_transcript_api.proxies import WebshareProxyConfig
         return YouTubeTranscriptApi(
-            proxy_config=GenericProxyConfig(
-                http_url=PROXY_URL,
-                https_url=PROXY_URL,
+            proxy_config=WebshareProxyConfig(
+                proxy_username=WEBSHARE_PROXY_USERNAME,
+                proxy_password=WEBSHARE_PROXY_PASSWORD,
             )
         )
     return YouTubeTranscriptApi()
