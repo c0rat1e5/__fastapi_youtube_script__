@@ -1,0 +1,21 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "./compose_production/Dockerfile"
+watchPatterns = ["/**/*.py", "/**/*.toml"]
+
+[deploy]
+region = "asia-southeast1"
+runtime = "V2"
+numReplicas = 1
+sleepApplication = false
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+healthcheckPath = "/health"
+
+# Traefik labels (Railway auto-configures, no nginx needed)
+# Railway handles HTTPS/SSL termination automatically
+
+[deploy.limitOverride]
+  [deploy.limitOverride.containers]
+  cpu = 1
+  memoryBytes = 512000000
