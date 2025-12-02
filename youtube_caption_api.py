@@ -77,8 +77,16 @@ def get_cached_transcript(video_id: str, language: str):
         oldest_key = min(_cache.keys(), key=lambda k: _cache[k][1])
         del _cache[oldest_key]
     
-    # APIから取得
-    transcript = ytt_api.fetch(video_id, languages=[language])
+    # 言語の優先順位を設定（日本語優先、英語フォールバック）
+    if language == "ja":
+        languages = ["ja", "en"]
+    elif language == "en":
+        languages = ["en", "ja"]
+    else:
+        languages = [language, "ja", "en"]
+    
+    # APIから取得（優先順位リストで試行）
+    transcript = ytt_api.fetch(video_id, languages=languages)
     _cache[cache_key] = (transcript, time.time())
     return transcript
 
@@ -131,7 +139,7 @@ def get_available_languages(video_id: str):
 def get_caption(
     video_id: str,
     format: str = Query(default="srt", description="出力形式: srt, json, text"),
-    language: str = Query(default="ja", description="言語コード: ja, en, etc."),
+    language: str = Query(default="en", description="言語コード: en, ja, etc."),
 ):
     """
     YouTube動画の字幕を取得
@@ -180,7 +188,7 @@ def get_caption(
 
 @app.get("/caption/{video_id}/full_text")
 def get_full_text(
-    video_id: str, language: str = Query(default="ja", description="言語コード")
+    video_id: str, language: str = Query(default="en", description="言語コード")
 ):
     """
     字幕を1つのテキストとして取得（タイムスタンプなし）
