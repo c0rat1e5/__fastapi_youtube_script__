@@ -1,0 +1,41 @@
+# run.sh 使い方
+
+## 基本
+
+```bash
+cd compose_local
+./run.sh [コマンド]
+```
+
+## コマンド一覧
+
+| コマンド    | 説明                                  |
+|-------------|---------------------------------------|
+| up          | ビルド＆起動（デフォルト）            |
+| down        | コンテナ停止                          |
+| logs        | ログをリアルタイム表示                |
+| restart     | 停止して再起動                        |
+| status      | コンテナ状態確認                      |
+| clean       | コンテナ＆不要イメージ削除            |
+| clean-all   | 全削除（キャッシュ含む）              |
+| fix         | clean + up（問題発生時に使用）        |
+
+## 例
+
+```bash
+./run.sh              # up と同じ
+./run.sh up           # ビルド＆起動
+./run.sh down         # 停止
+./run.sh logs         # ログ確認（Ctrl+C で終了）
+./run.sh fix          # 問題時のリセット
+./run.sh clean-all    # 完全クリーンアップ
+```
+
+## API エンドポイント
+
+起動後: http://localhost:8765/
+
+- GET /              - API情報
+- GET /health        - ヘルスチェック
+- GET /caption/{id}  - 字幕取得
+- GET /languages/{id} - 利用可能言語

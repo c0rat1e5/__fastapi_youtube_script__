@@ -36,10 +36,17 @@ def root():
         "message": "YouTube Caption API",
         "endpoints": {
             "/caption/{video_id}": "字幕を取得",
-            "/languages/{video_id}": "利用可能な言語を取得"
+            "/languages/{video_id}": "利用可能な言語を取得",
+            "/health": "ヘルスチェック"
         },
         "example": "/caption/VgpTwJ-snGw?format=srt&language=ja"
     }
+
+
+@app.get("/health")
+def health_check():
+    """ヘルスチェック用エンドポイント"""
+    return {"status": "healthy"}
 
 
 @app.get("/languages/{video_id}")
