@@ -13,11 +13,16 @@ n8nでの使用:
   HTTP Requestノードで http://localhost:8000/caption/VIDEO_ID を呼び出す
 """
 
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse, JSONResponse
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import SRTFormatter, JSONFormatter, TextFormatter
 import uvicorn
+
+# .env ファイルを読み込み（ローカル開発用、なければスキップ）
+load_dotenv()
 
 app = FastAPI(
     title="YouTube Caption API",
@@ -25,8 +30,24 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# プロキシ設定（環境変数から取得）
+# Webshare形式: user:pass@host:port
+PROXY_URL = os.getenv("PROXY_URL")  # 例: http://user:pass@host:port
+
+def create_ytt_api():
+    """プロキシ設定付きの YouTubeTranscriptApi を作成"""
+    if PROXY_URL:
+        from youtube_transcript_api.proxies import GenericProxyConfig
+        return YouTubeTranscriptApi(
+            proxy_config=GenericProxyConfig(
+                http_url=PROXY_URL,
+                https_url=PROXY_URL,
+            )
+        )
+    return YouTubeTranscriptApi()
+
 # APIインスタンス
-ytt_api = YouTubeTranscriptApi()
+ytt_api = create_ytt_api()
 
 
 @app.get("/")
